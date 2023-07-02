@@ -4,7 +4,7 @@ import { CustomChainHandler, getBaseClasses } from '../../../src/utils'
 import { ConversationalRetrievalQAChain } from 'langchain/chains'
 import { AIChatMessage, BaseRetriever, HumanChatMessage } from 'langchain/schema'
 import { BaseChatMemory, BufferMemory, ChatMessageHistory } from 'langchain/memory'
-import { PromptTemplate } from 'langchain/prompts'
+import { BasePromptTemplate, PromptTemplate } from 'langchain/prompts'
 
 const default_qa_template = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
@@ -48,6 +48,12 @@ class ConversationalRetrievalQAChain_Chains implements INode {
                 label: 'Vector Store Retriever',
                 name: 'vectorStoreRetriever',
                 type: 'BaseRetriever'
+            },
+            {
+                label: 'QA Prompt Template',
+                name: 'qaPromptTemplate',
+                type: 'BasePromptTemplate',
+                optional: true,
             },
             {
                 label: 'Return Source Documents',
@@ -99,12 +105,13 @@ class ConversationalRetrievalQAChain_Chains implements INode {
         const systemMessagePrompt = nodeData.inputs?.systemMessagePrompt as string
         const returnSourceDocuments = nodeData.inputs?.returnSourceDocuments as boolean
         const chainOption = nodeData.inputs?.chainOption as string
+        const qaPromptTemplate = nodeData.inputs?.qaPromptTemplate as BasePromptTemplate
 
         const obj: any = {
             verbose: process.env.DEBUG === 'true' ? true : false,
             qaChainOptions: {
                 type: 'stuff',
-                prompt: PromptTemplate.fromTemplate(systemMessagePrompt ? `${systemMessagePrompt}\n${qa_template}` : default_qa_template)
+                prompt: qaPromptTemplate ? qaPromptTemplate : PromptTemplate.fromTemplate(systemMessagePrompt ? `${systemMessagePrompt}\n${qa_template}` : default_qa_template)
             },
             memory: new BufferMemory({
                 memoryKey: 'chat_history',
